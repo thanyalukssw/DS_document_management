@@ -221,6 +221,21 @@
                     <textarea id="uploadDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Attach File (Optional)</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-500 transition">
+                        <input type="file" id="uploadFileInput" class="hidden" onchange="handleFileSelect(this)">
+                        <button type="button" onclick="document.getElementById('uploadFileInput').click()" class="text-green-600 hover:text-green-700 font-medium">
+                            <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Click to upload or drag and drop
+                        </button>
+                        <p class="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 5MB)</p>
+                        <div id="selectedFileName" class="mt-2 text-sm text-green-600 font-medium"></div>
+                    </div>
+                </div>
+
                 <div class="flex gap-3 pt-2">
                     <button onclick="hideUploadModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
                         Cancel
@@ -237,6 +252,7 @@
         // Global state
         let currentUser = null;
         let files = [];
+        let selectedFile = null;
 
         // Status configuration
         const statusConfig = {
@@ -302,11 +318,62 @@
             document.getElementById('uploadModal').classList.remove('hidden');
             document.getElementById('uploadFileName').value = '';
             document.getElementById('uploadDescription').value = '';
+            document.getElementById('uploadFileInput').value = '';
+            document.getElementById('selectedFileName').textContent = '';
+            selectedFile = null;
         }
 
         // Hide upload modal
         function hideUploadModal() {
             document.getElementById('uploadModal').classList.add('hidden');
+            selectedFile = null;
+        }
+
+        // Handle file selection
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (!file) {
+                selectedFile = null;
+                document.getElementById('selectedFileName').textContent = '';
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                input.value = '';
+                return;
+            }
+
+            // Validate file type
+            const allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'image/jpeg',
+                'image/png'
+            ];
+
+            if (!allowedTypes.includes(file.type)) {
+                alert('Only PDF, DOC, DOCX, XLS, XLSX, JPG, PNG files are allowed');
+                input.value = '';
+                return;
+            }
+
+            // Read file as base64
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedFile = {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    data: e.target.result
+                };
+                document.getElementById('selectedFileName').textContent = `✓ ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            };
+            reader.readAsDataURL(file);
         }
 
         // Handle file upload
@@ -328,6 +395,7 @@
                 uploadedBy: currentUser.username,
                 uploadedAt: new Date().toISOString(),
                 status: 'in_process',
+                attachedFile: selectedFile,
                 statusHistory: [{
                     status: 'in_process',
                     timestamp: new Date().toISOString(),
@@ -338,6 +406,17 @@
             files.push(newFile);
             saveFiles();
             hideUploadModal();
+        }
+
+        // Download attached file
+        function downloadFile(fileId) {
+            const file = files.find(f => f.id === fileId);
+            if (file && file.attachedFile) {
+                const link = document.createElement('a');
+                link.href = file.attachedFile.data;
+                link.download = file.attachedFile.name;
+                link.click();
+            }
         }
 
         // Update file status
@@ -422,6 +501,14 @@
                             <div>
                                 <p class="font-medium text-gray-900">${file.fileName}</p>
                                 <p class="text-sm text-gray-500">${file.description || ''}</p>
+                                ${file.attachedFile ? `
+                                    <button onclick="downloadFile(${file.id})" class="text-xs text-blue-600 hover:text-blue-800 mt-1 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                        ${file.attachedFile.name}
+                                    </button>
+                                ` : ''}
                             </div>
                         </td>
                         <td class="px-4 py-3">
