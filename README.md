@@ -172,19 +172,20 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-gradient-to-r from-green-600 to-yellow-500 text-black">
+                        <thead class="bg-gradient-to-r from-green-600 to-yellow-500 text-Black">
                             <tr>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">File Name</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Type</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Uploaded By</th>
-                                <th class="px-4 py-3 text-left text-sm font-semibold">Date</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Upload Date</th>
                                 <th class="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                                <th class="px-4 py-3 text-left text-sm font-semibold">Last Updated</th>
                                 <th id="actionsHeader" class="px-4 py-3 text-left text-sm font-semibold hidden">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="filesTableBody" class="divide-y divide-gray-200">
                             <tr>
-                                <td colspan="5" class="px-4 py-8 text-center text-gray-500">No files found</td>
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">No files found</td>
                             </tr>
                         </tbody>
                     </table>
@@ -538,12 +539,18 @@
             const tbody = document.getElementById('filesTableBody');
             
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="${currentUser?.isAdmin ? 6 : 5}" class="px-4 py-8 text-center text-gray-500">No files found</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${currentUser?.isAdmin ? 7 : 6}" class="px-4 py-8 text-center text-gray-500">No files found</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map(file => {
                 const status = statusConfig[file.status];
+                
+                // Get last status update timestamp
+                const lastUpdate = file.statusHistory[file.statusHistory.length - 1];
+                const lastUpdateTime = formatDate(lastUpdate.timestamp);
+                const lastUpdateBy = lastUpdate.updatedBy;
+                
                 const statusSelect = currentUser?.isAdmin ? `
                     <td class="px-4 py-3">
                         <select onchange="handleStatusChange(${file.id}, this.value)" class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500">
@@ -587,6 +594,12 @@
                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium text-white ${status.color}">
                                 ${status.icon} ${status.label}
                             </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-sm">
+                                <p class="text-gray-600">${lastUpdateTime}</p>
+                                <p class="text-xs text-gray-500">by ${lastUpdateBy}</p>
+                            </div>
                         </td>
                         ${statusSelect}
                     </tr>
