@@ -438,23 +438,23 @@
         // Department and file type mapping
         const departmentFileTypes = {
             'Academic Affairs Department': [
-                'Swap periods',
-                'Teaching materials',
-                'Research submission',
+                'swap periods',
+                'teaching materials',
+                'research submission',
                 'Others'
             ],
             'HR and Student Affairs Department': [
-                'Leave request',
-                'Request submission',
+                'leave request',
+                'request submission',
                 'Others'
             ],
             'General Administration Department': [
-                'Maintenance',
-                'Request submission',
+                'maintenance',
+                'request submission',
                 'Others'
             ],
             'Budgeting and Finance Department': [
-                'Supply request',
+                'supply request',
                 'Others'
             ]
         };
@@ -948,6 +948,9 @@
             const departmentFilter = document.getElementById('departmentFilter').value;
             const typeFilter = document.getElementById('typeFilter').value;
             
+            // Update type filter options first based on department
+            updateTypeFilterOptions();
+            
             let filtered = files;
 
             // Filter by user (non-admins only see their files)
@@ -984,9 +987,6 @@
             if (typeFilter !== 'all') {
                 filtered = filtered.filter(f => f.fileType === typeFilter);
             }
-
-            // Update type filter options based on current filters
-            updateTypeFilterOptions();
 
             const tbody = document.getElementById('filesTableBody');
             
@@ -1086,29 +1086,37 @@
             const typeFilterSelect = document.getElementById('typeFilter');
             const currentValue = typeFilterSelect.value;
             
+            // Clear current options
             typeFilterSelect.innerHTML = '<option value="all">All Types</option>';
             
             if (departmentFilter !== 'all' && departmentFileTypes[departmentFilter]) {
+                // Show only types for selected department
                 departmentFileTypes[departmentFilter].forEach(type => {
                     const option = document.createElement('option');
                     option.value = type;
                     option.textContent = type;
                     typeFilterSelect.appendChild(option);
                 });
-                typeFilterSelect.value = currentValue;
+                // Try to maintain selected value if it exists in new list
+                const optionExists = Array.from(typeFilterSelect.options).some(opt => opt.value === currentValue);
+                if (optionExists) {
+                    typeFilterSelect.value = currentValue;
+                } else {
+                    typeFilterSelect.value = 'all';
+                }
             } else if (departmentFilter === 'all') {
                 // Show all types from all departments
                 const allTypes = new Set();
                 Object.values(departmentFileTypes).forEach(types => {
                     types.forEach(type => allTypes.add(type));
                 });
-                allTypes.forEach(type => {
+                Array.from(allTypes).sort().forEach(type => {
                     const option = document.createElement('option');
                     option.value = type;
                     option.textContent = type;
                     typeFilterSelect.appendChild(option);
                 });
-                typeFilterSelect.value = currentValue;
+                typeFilterSelect.value = currentValue === 'all' || Array.from(typeFilterSelect.options).some(opt => opt.value === currentValue) ? currentValue : 'all';
             }
         }
 
