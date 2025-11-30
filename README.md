@@ -438,23 +438,23 @@
         // Department and file type mapping
         const departmentFileTypes = {
             'Academic Affairs Department': [
-                'swap periods',
-                'teaching materials',
-                'research submission',
+                'Swap Periods',
+                'Teaching Materials',
+                'Research Submission',
                 'Others'
             ],
             'HR and Student Affairs Department': [
-                'leave request',
-                'request submission',
+                'Leave Request',
+                'Request Submission',
                 'Others'
             ],
             'General Administration Department': [
-                'maintenance',
-                'request submission',
+                'Maintenance',
+                'Request Submission',
                 'Others'
             ],
             'Budgeting and Finance Department': [
-                'supply request',
+                'Supply Request',
                 'Others'
             ]
         };
